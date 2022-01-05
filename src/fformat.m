@@ -1,21 +1,4 @@
-## fformat.m
-## Copyright (C) 2022-2023  Yassin Achengli <0619883460@uma.es>
-##
-## This program is free software: you can redistribute it and/or modify
-## it under the terms of the GNU General Public License as published by
-## the Free Software Foundation, either version 3 of the License, or
-## (at your option) any later version.
-##
-## This program is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with this program.  If not, see <http://www.gnu.org/licenses/>.
-##
-
-function r = fformat(file_list)
+function r = fformat(file_list=false)
         ## All the files must be writted in csv format with the name and the license to be converted 
         ## in a list of structs, those structs must be with the next template
         ## 
@@ -30,8 +13,7 @@ function r = fformat(file_list)
         ## All the structs must be agrupated in a list pushing one next others with a for loop or whatever 
         ## you take convenient.
 
-        if(nargin == 0)
-                f = fopen("octave_files.csv",'r');
+        if(nargin==0 || file_list == false)
                 ## file list must be expresed with the next notation:
                 ## @example
                 ## 
@@ -41,6 +23,7 @@ function r = fformat(file_list)
                 ## fformat.m : BSD
                 ##
                 ## @endexample
+                f = fopen("octave_files.csv",'r');
                 if(f==-1)
                         r = false;
                         error("octave_files.csv file do not exist, if you want converse files to licensed files, please\
@@ -49,21 +32,22 @@ function r = fformat(file_list)
                 endif
                 file_list = [];
                 while (~feof(f))
-                        buff = strdissmis(fgetl(f),' ');
+                        buff = strdissmis(fgetl(f)," ");
                         if(length(buff)==0)
                                 continue;
                         endif
-                        buff = strplit(buff,':');
-                        if(length(d) ~= 2)
+                        buff = strsplit(buff,":");
+                        if(length(buff) ~= 2)
                                 r = false;
                                 error("octave_files.csv format is not correct, check if it have a syntax error");
                         endif
                         d = struct (
-                                "name", buff(1),
-                                "license",buff(2)
+                                "name", buff(1,1),
+                                "license",buff(1,2)
                         );
                         file_list = [file_list , d];
                 endwhile
+                fclose(f);
         endif
         for a = 1:length(file_list)
                 f = formatfile(file_list(a).name,file_list(a).license);
@@ -74,44 +58,25 @@ function r = fformat(file_list)
         endfor
 endfunction
 
-function spl = strplit(text,pattern)
-        ret = "";
-        if (nargin ~=2)
-                print_usage();
-        endfunction
-        if(typeinfo(text) ~= 'string' && typeinfo(text) ~= 'sq_string')
-                error("the two parameters must be string type");
-        endif
-        if(typeinfo(pattern) ~= 'string' && typeinfo(pattern)~='sq_string')
-                error("the two parameters must be string type");
-        endif
-        buff= "";
-        spl=[];
-        for a=1:length(text)
-                if(text(a)~=pattern)
-                        buff = strcat(buff,text(a));    
-                else
-                        spl = [spl ; buff ];
-                        buff="";
-                endif
-        endfor
-endfunction 
 function ret = strdissmis(text, pattern)
         ret = "";
         if (nargin ~=2)
-                print_usage();
-        endfunction
-        if(typeinfo(text) ~= 'string' && typeinfo(text) ~= 'sq_string')
-                error("the two parameters must be string type");
+                ret = false;
+                error("must have 2 args");
         endif
+        #if((typeinfo(text) ~= 'string') && (typeinfo(text) ~= 'sq_string'))
+        #        ret = false;
+        #        error("the two parameters must be string type");
+        #endif
         if(typeinfo(pattern) ~= 'string' && typeinfo(pattern)~='sq_string')
+                ret = false;
                 error("the two parameters must be string type");
         endif
         for a = 1:length(text)
                 if(text(a)~=pattern)
                         ret = strcat(ret,text(a));
                 endif
-        endfunction
+        endfor
 endfunction 
 
 function r = formatfile(file_name, license_type)
@@ -125,33 +90,33 @@ function r = formatfile(file_name, license_type)
         endif
         switch (license_type)
                 case "GPL"              ## General Public License v1.0
-                        license = fopen("licenses/GPLlicense.txt",'r');
+                        license = "licenses/GPLlicense.txt";
                 case "GPL2"             ## General Public License v2.0
-                        license = fopen("licenses/GPL2license.txt",'r');
+                        license = "licenses/GPL2license.txt";
                 case "GPL3"             ## General Public License v3.0
-                        license = fopen("licenses/GPL3license.txt",'r');
+                        license = "licenses/GPL3license.txt";
                 case "MIT"              ## Massachusetts Institute of Technology license
-                        license = fopen("licenses/MITlicense.txt",'r');
+                        license = "licenses/MITlicense.txt";
                 case "BSD"              ## Berkeley Software Distribution license
-                        license = fopen("licenses/BSDlicense.txt",'r');
+                        license = "licenses/BSDlicense.txt";
                 case "NCSA"             ## University of Illinois Open Source license
-                        license = fopen("licenses/NCSAlicense.txt",'r');
+                        license = "licenses/NCSAlicense.txt";
                 case "PHP"              ## PHP license v3.0
-                        license = fopen("licenses/PHPlicense.txt",'r'); 
+                        license = "licenses/PHPlicense.txt"; 
                 case "W3C"              ## World Wide Web Consortium license 
-                        license = fopen("licenses/W3Clicense.txt",'r');
+                        license = "licenses/W3Clicense.txt";
                 case "OpenSSL"          ## OpenSSL license
-                        license = fopen("licenses/OpenSSLlicense.txt",'r');
+                        license = "licenses/OpenSSLlicense.txt";
                 case "Mozilla"          ## Mozilla license
-                        license = fopen("licenses/Mozillalicense.txt",'r');
+                        license = "licenses/Mozillalicense.txt";
                 case "OSL"              ## Open Software License
-                        license = fopen("licenses/OSLlicense.txt",'r'); 
+                        license = "licenses/OSLlicense.txt"; 
                 case "ASL"              ## Apple Software License
-                        license = fopen("licenses/ASLlicense.txt",'r');
+                        license = "licenses/ASLlicense.txt";
                 case "CDDL"             ## Common Development and Distribution license
-                        license = fopen("licenses/CDDLlicense.txt",'r');
+                        license = "licenses/CDDLlicense.txt";
                 otherwise               ## in otherwise, take GPL v3.0 license
-                        license = fopen("licenses/GPL3license.txt",'r');
+                        license = "licenses/GPL3license.txt";
         endswitch
         
         lic_desc = fopen(license,'r');
@@ -159,7 +124,7 @@ function r = formatfile(file_name, license_type)
                 r = false;
                 error("couldn't open license file, maybe not exist or its crashed");
         endif
-        f =  fopen(file_name,'r');
+        f =  fopen(strcat("files/",file_name),'r');
         if(f == -1)
                 r = false;
                 error("couldn't open file name path");
@@ -175,7 +140,7 @@ function r = formatfile(file_name, license_type)
         exist = false;
         for a=1:length(d)
                 if(d(a).isdir == 1)
-                        if(d(a).name == "licensed")
+                        if(strcmp(d(a).name,"licensed"))
                                 exist = true;
                         endif
                 endif
